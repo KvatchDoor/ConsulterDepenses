@@ -1,43 +1,63 @@
 package com.consulter.infrastructure.web.controller;
 
+import com.consulter.domain.model.Movement;
 import com.consulter.domain.port.in.MovementUseCase;
-import com.consulter.infrastructure.web.dto.request.CreateMovementRequest;
-import com.consulter.infrastructure.web.dto.response.MovementResponse;
+import com.consulter.infrastructure.web.api.MovementsApi;
+import com.consulter.infrastructure.web.model.CreateMovementRequest;
+import com.consulter.infrastructure.web.model.MovementResponse;
+import com.consulter.infrastructure.web.model.MovementType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/movements")
 @RequiredArgsConstructor
-public class MovementController {
+public class MovementController implements MovementsApi {
 
     private final MovementUseCase movementUseCase;
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public MovementResponse create(@RequestBody CreateMovementRequest request) {
-        return MovementResponse.from(movementUseCase.create(
-            request.accountId(), request.createdBy(), request.categoryId(),
-            request.type(), request.amount(), request.description(), request.movementDate()
-        ));
+    @Override
+    public ResponseEntity<MovementResponse> createMovement(CreateMovementRequest request) {
+        Movement movement = movementUseCase.create(
+            request.getAccountId(),
+            request.getCreatedBy(),
+            request.getCategoryId(),
+            com.consulter.domain.model.MovementType.valueOf(request.getType().name()),
+            request.getAmount(),
+            request.getDescription(),
+            request.getMovementDate()
+        );
+        return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(movement));
     }
 
-    @GetMapping
-    public List<MovementResponse> findByAccount(@RequestParam UUID accountId) {
-        return movementUseCase.findByAccountId(accountId).stream().map(MovementResponse::from).toList();
+    @Override
+    public ResponseEntity<List<MovementResponse>> getMovementsByAccount(UUID accountId) {
+        return ResponseEntity.ok(movementUseCase.findByAccountId(accountId).stream().map(this::toResponse).toList());
     }
 
-    @GetMapping("/{id}")
-    public MovementResponse findById(@PathVariable UUID id) {
-        return MovementResponse.from(movementUseCase.findById(id));
+    @Override
+    public ResponseEntity<MovementResponse> getMovementById(UUID id) {
+        return ResponseEntity.ok(toResponse(movementUseCase.findById(id)));
     }
 
-    @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable UUID id) {
+    @Override
+    public ResponseEntity<Void> deleteMovement(UUID id) {
         movementUseCase.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    private MovementResponse toResponse(Movement m) {
+        return new MovementResponse()
+            .id(m.id())
+            .accountId(m.accountId())
+            .createdBy(m.createdBy())
+            .categoryId(m.categoryId())
+            .type(MovementType.valueOf(m.type().name()))
+            .amount(m.amount())
+            .description(m.description())
+            .movementDate(m.movementDate());
     }
 }
