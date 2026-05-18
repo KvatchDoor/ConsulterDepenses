@@ -1,0 +1,27 @@
+meta {
+  name: Create Movement
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/movements
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "accountId": "{{accountId}}",
+    "createdBy": "{{userId}}",
+    "categoryId": "{{categoryId}}",
+    "type": "DEBIT",
+    "amount": 42.50,
+    "description": "Groceries",
+    "movementDate": "2026-05-18"
+  }
+}
