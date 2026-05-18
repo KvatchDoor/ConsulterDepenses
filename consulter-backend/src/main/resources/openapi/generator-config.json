@@ -1,0 +1,12 @@
+{
+  "apiPackage": "com.consulter.infrastructure.web.api",
+  "modelPackage": "com.consulter.infrastructure.web.model",
+  "typeMappings": {
+    "number": "java.math.BigDecimal"
+  },
+  "interfaceOnly": true,
+  "useSpringBoot3": true,
+  "useTags": true,
+  "dateLibrary": "java8",
+  "openApiNullable": false
+}

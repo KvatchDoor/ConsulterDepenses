@@ -1,0 +1,21 @@
+meta {
+  name: Add Member
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/accounts/{{accountId}}/members
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "userId": "{{memberId}}"
+  }
+}

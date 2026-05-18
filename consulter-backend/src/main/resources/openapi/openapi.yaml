@@ -1,0 +1,360 @@
+openapi: "3.0.3"
+info:
+  title: ConsulterDepenses API
+  version: "1.0.0"
+  description: API for managing financial accounts and movements
+
+servers:
+  - url: /api
+
+tags:
+  - name: Users
+  - name: Accounts
+  - name: Categories
+  - name: Movements
+
+paths:
+  /users/{id}:
+    get:
+      tags: [Users]
+      operationId: getUserById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /accounts:
+    post:
+      tags: [Accounts]
+      operationId: createAccount
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAccountRequest'
+      responses:
+        "201":
+          description: Account created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+    get:
+      tags: [Accounts]
+      operationId: getAccountsByUser
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: List of accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AccountResponse'
+
+  /accounts/{id}:
+    get:
+      tags: [Accounts]
+      operationId: getAccountById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Account found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+        "404":
+          description: Account not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /accounts/{id}/members:
+    post:
+      tags: [Accounts]
+      operationId: addMember
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddMemberRequest'
+      responses:
+        "204":
+          description: Member added
+
+  /accounts/{id}/members/{userId}:
+    delete:
+      tags: [Accounts]
+      operationId: removeMember
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Member removed
+
+  /categories:
+    get:
+      tags: [Categories]
+      operationId: getAllCategories
+      responses:
+        "200":
+          description: List of categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CategoryResponse'
+
+  /movements:
+    post:
+      tags: [Movements]
+      operationId: createMovement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMovementRequest'
+      responses:
+        "201":
+          description: Movement created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovementResponse'
+    get:
+      tags: [Movements]
+      operationId: getMovementsByAccount
+      parameters:
+        - name: accountId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: List of movements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MovementResponse'
+
+  /movements/{id}:
+    get:
+      tags: [Movements]
+      operationId: getMovementById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Movement found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovementResponse'
+        "404":
+          description: Movement not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags: [Movements]
+      operationId: deleteMovement
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Movement deleted
+
+components:
+  schemas:
+
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        lastName:
+          type: string
+        firstName:
+          type: string
+
+    CreateAccountRequest:
+      type: object
+      required: [ownerId, name]
+      properties:
+        ownerId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        currency:
+          type: string
+          default: EUR
+          minLength: 3
+          maxLength: 3
+
+    AccountResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        ownerId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        balance:
+          type: number
+        currency:
+          type: string
+
+    AddMemberRequest:
+      type: object
+      required: [userId]
+      properties:
+        userId:
+          type: string
+          format: uuid
+
+    CategoryResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        label:
+          type: string
+        color:
+          type: string
+        icon:
+          type: string
+
+    MovementType:
+      type: string
+      enum: [DEBIT, CREDIT]
+
+    CreateMovementRequest:
+      type: object
+      required: [accountId, createdBy, type, amount, movementDate]
+      properties:
+        accountId:
+          type: string
+          format: uuid
+        createdBy:
+          type: string
+          format: uuid
+        categoryId:
+          type: string
+          format: uuid
+        type:
+          $ref: '#/components/schemas/MovementType'
+        amount:
+          type: number
+          exclusiveMinimum: 0
+        description:
+          type: string
+        movementDate:
+          type: string
+          format: date
+
+    MovementResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        accountId:
+          type: string
+          format: uuid
+        createdBy:
+          type: string
+          format: uuid
+        categoryId:
+          type: string
+          format: uuid
+        type:
+          $ref: '#/components/schemas/MovementType'
+        amount:
+          type: number
+        description:
+          type: string
+        movementDate:
+          type: string
+          format: date
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
