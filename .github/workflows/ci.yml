@@ -1,15 +1,64 @@
-name: Full CI Pipeline
+name: CI Orchestrator
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
 
 jobs:
-  backend:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend-changed: ${{ steps.changes.outputs.backend }}
+      frontend-changed: ${{ steps.changes.outputs.frontend }}
+      both-changed: ${{ steps.changes.outputs.both }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changes
+        id: changes
+        run: |
+          # Déterminer la base de comparaison
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            BASE="${{ github.event.pull_request.base.sha }}"
+          else
+            BASE="${{ github.event.before }}"
+          fi
+          
+          # Si premier push, comparer avec HEAD~1
+          if [ -z "$BASE" ] || [ "$BASE" == "0000000000000000000000000000000000000000" ]; then
+            BASE="HEAD~1"
+          fi
+          
+          # Vérifier les changements
+          BACKEND_CHANGED=$(git diff $BASE HEAD --name-only | grep -q "consulter-backend/" && echo "true" || echo "false")
+          FRONTEND_CHANGED=$(git diff $BASE HEAD --name-only | grep -q "consulter-frontend/" && echo "true" || echo "false")
+          
+          echo "backend=$BACKEND_CHANGED" >> $GITHUB_OUTPUT
+          echo "frontend=$FRONTEND_CHANGED" >> $GITHUB_OUTPUT
+          
+          # Vérifier si les DEUX ont changé
+          if [ "$BACKEND_CHANGED" == "true" ] && [ "$FRONTEND_CHANGED" == "true" ]; then
+            echo "both=true" >> $GITHUB_OUTPUT
+          else
+            echo "both=false" >> $GITHUB_OUTPUT
+          fi
+
+  full-ci:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.both-changed == 'true'
+    uses: ./.github/workflows/ci-full.yml
+
+  backend-ci:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend-changed == 'true' && needs.detect-changes.outputs.both-changed == 'false'
     uses: ./.github/workflows/backend-ci.yml
 
-  frontend:
+  frontend-ci:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend-changed == 'true' && needs.detect-changes.outputs.both-changed == 'false'
     uses: ./.github/workflows/frontend-ci.yml
 
