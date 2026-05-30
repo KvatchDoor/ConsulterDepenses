@@ -107,7 +107,7 @@
                             <goal>generate</goal>
                         </goals>
                         <configuration>
-                            <inputSpec>${project.basedir}/src/main/resources/openapi/openapi.yaml</inputSpec>
+                            <inputSpec>${project.basedir}/src/main/resources/openapi/consulter-depense-service.yaml</inputSpec>
                             <generatorName>spring</generatorName>
                             <configurationFile>${project.basedir}/src/main/resources/openapi/generator-config.json</configurationFile>
                         </configuration>
