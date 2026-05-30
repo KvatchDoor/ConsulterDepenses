@@ -9,7 +9,7 @@ services:
     environment:
       POSTGRES_USER: monuser
       POSTGRES_PASSWORD: monpassword
-      POSTGRES_DB: mabase
+      POSTGRES_DB: consulter_depenses
 
     ports:
       - "5432:5432"
