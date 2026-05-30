@@ -36,7 +36,7 @@ CREATE TABLE account (
     owner_id    UUID NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
     name        VARCHAR(100) NOT NULL,
     balance     NUMERIC(12, 2) NOT NULL DEFAULT 0,
-    currency    CHAR(3) NOT NULL DEFAULT 'EUR',
+    currency    VARCHAR(3) NOT NULL DEFAULT 'EUR',
     created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at  TIMESTAMP NOT NULL DEFAULT NOW()
 );
