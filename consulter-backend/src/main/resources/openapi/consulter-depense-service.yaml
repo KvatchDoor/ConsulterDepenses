@@ -9,38 +9,49 @@ servers:
 
 tags:
   - name: Users
+    description: User management endpoints
   - name: Accounts
+    description: Account management and shared account operations
   - name: Categories
+    description: Expense categories
   - name: Movements
+    description: Financial transactions (debits and credits)
 
 paths:
+  # ==================== USERS ENDPOINTS ====================
   /users/{id}:
     get:
+      summary: Get user details by ID
+      description: Retrieves the complete information of a user including name, email, and personal details
       tags: [Users]
       operationId: getUserById
       parameters:
         - name: id
           in: path
           required: true
+          description: The unique identifier (UUID) of the user
           schema:
             type: string
             format: uuid
       responses:
         "200":
-          description: User found
+          description: User found successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserResponse'
         "404":
-          description: User not found
+          description: User not found with the provided ID
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  # ==================== ACCOUNTS ENDPOINTS ====================
   /accounts:
     post:
+      summary: Create a new account
+      description: Creates a new financial account for the specified owner. The account will start with a balance of 0 in the specified currency.
       tags: [Accounts]
       operationId: createAccount
       requestBody:
@@ -51,24 +62,28 @@ paths:
               $ref: '#/components/schemas/CreateAccountRequest'
       responses:
         "201":
-          description: Account created
+          description: Account created successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AccountResponse'
+
     get:
+      summary: Get all accounts for a user
+      description: Retrieves a list of all financial accounts owned or shared with the specified user
       tags: [Accounts]
       operationId: getAccountsByUser
       parameters:
         - name: userId
           in: query
           required: true
+          description: The UUID of the user to retrieve accounts for
           schema:
             type: string
             format: uuid
       responses:
         "200":
-          description: List of accounts
+          description: List of accounts retrieved successfully
           content:
             application/json:
               schema:
@@ -78,37 +93,44 @@ paths:
 
   /accounts/{id}:
     get:
+      summary: Get account details by ID
+      description: Retrieves detailed information about a specific account including balance, owner, and currency
       tags: [Accounts]
       operationId: getAccountById
       parameters:
         - name: id
           in: path
           required: true
+          description: The unique identifier (UUID) of the account
           schema:
             type: string
             format: uuid
       responses:
         "200":
-          description: Account found
+          description: Account found successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AccountResponse'
         "404":
-          description: Account not found
+          description: Account not found with the provided ID
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  # ==================== ACCOUNT MEMBERS ENDPOINTS ====================
   /accounts/{id}/members:
     post:
+      summary: Add a member to a shared account
+      description: Adds a new user as a member to a shared account. The member will be able to view and manage movements in this account.
       tags: [Accounts]
       operationId: addMember
       parameters:
         - name: id
           in: path
           required: true
+          description: The unique identifier (UUID) of the account
           schema:
             type: string
             format: uuid
@@ -120,36 +142,43 @@ paths:
               $ref: '#/components/schemas/AddMemberRequest'
       responses:
         "204":
-          description: Member added
+          description: Member added successfully
 
   /accounts/{id}/members/{userId}:
     delete:
+      summary: Remove a member from a shared account
+      description: Removes a user from a shared account. The removed member will no longer have access to the account.
       tags: [Accounts]
       operationId: removeMember
       parameters:
         - name: id
           in: path
           required: true
+          description: The unique identifier (UUID) of the account
           schema:
             type: string
             format: uuid
         - name: userId
           in: path
           required: true
+          description: The unique identifier (UUID) of the user to remove
           schema:
             type: string
             format: uuid
       responses:
         "204":
-          description: Member removed
+          description: Member removed successfully
 
+  # ==================== CATEGORIES ENDPOINTS ====================
   /categories:
     get:
+      summary: Get all available expense categories
+      description: Retrieves a complete list of all available expense categories that can be assigned to movements. Each category includes a label, color, and icon for UI representation.
       tags: [Categories]
       operationId: getAllCategories
       responses:
         "200":
-          description: List of categories
+          description: List of categories retrieved successfully
           content:
             application/json:
               schema:
@@ -157,8 +186,11 @@ paths:
                 items:
                   $ref: '#/components/schemas/CategoryResponse'
 
+  # ==================== MOVEMENTS ENDPOINTS ====================
   /movements:
     post:
+      summary: Create a new financial movement
+      description: Creates a new transaction (debit or credit) for an account. The movement updates the account balance and is recorded with a category and date.
       tags: [Movements]
       operationId: createMovement
       requestBody:
@@ -169,24 +201,28 @@ paths:
               $ref: '#/components/schemas/CreateMovementRequest'
       responses:
         "201":
-          description: Movement created
+          description: Movement created successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/MovementResponse'
+
     get:
+      summary: Get all movements for an account
+      description: Retrieves a list of all financial transactions (debits and credits) recorded in a specific account
       tags: [Movements]
       operationId: getMovementsByAccount
       parameters:
         - name: accountId
           in: query
           required: true
+          description: The UUID of the account to retrieve movements for
           schema:
             type: string
             format: uuid
       responses:
         "200":
-          description: List of movements
+          description: List of movements retrieved successfully
           content:
             application/json:
               schema:
@@ -196,165 +232,224 @@ paths:
 
   /movements/{id}:
     get:
+      summary: Get a specific movement details
+      description: Retrieves detailed information about a single financial transaction including amount, type, category, and date
       tags: [Movements]
       operationId: getMovementById
       parameters:
         - name: id
           in: path
           required: true
+          description: The unique identifier (UUID) of the movement
           schema:
             type: string
             format: uuid
       responses:
         "200":
-          description: Movement found
+          description: Movement found successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/MovementResponse'
         "404":
-          description: Movement not found
+          description: Movement not found with the provided ID
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+
     delete:
+      summary: Delete a financial movement
+      description: Permanently removes a transaction from an account. This will also adjust the account balance accordingly.
       tags: [Movements]
       operationId: deleteMovement
       parameters:
         - name: id
           in: path
           required: true
+          description: The unique identifier (UUID) of the movement to delete
           schema:
             type: string
             format: uuid
       responses:
         "204":
-          description: Movement deleted
+          description: Movement deleted successfully
 
+# ==================== SCHEMAS / DATA MODELS ====================
 components:
   schemas:
-
+    # User model - represents a user in the system
     UserResponse:
       type: object
+      description: User profile information
       properties:
         id:
           type: string
           format: uuid
+          description: Unique identifier for the user
         email:
           type: string
+          description: User's email address (used for authentication and communication)
         lastName:
           type: string
+          description: User's last name
         firstName:
           type: string
+          description: User's first name
 
+    # Account creation request model
     CreateAccountRequest:
       type: object
       required: [ownerId, name]
+      description: Request model for creating a new financial account
       properties:
         ownerId:
           type: string
           format: uuid
+          description: UUID of the user who will own this account
         name:
           type: string
+          description: Name or label for the account (e.g., "My Checking Account", "Shared Expenses")
         currency:
           type: string
           default: EUR
           minLength: 3
           maxLength: 3
+          description: 3-letter ISO currency code (e.g., EUR, USD, GBP). Defaults to EUR if not specified.
 
+    # Account response model - returned from API
     AccountResponse:
       type: object
+      description: Complete account information including balance
       properties:
         id:
           type: string
           format: uuid
+          description: Unique identifier for the account
         ownerId:
           type: string
           format: uuid
+          description: UUID of the account owner
         name:
           type: string
+          description: Account name or label
         balance:
           type: number
+          description: Current balance of the account (sum of all movements)
         currency:
           type: string
+          description: 3-letter ISO currency code of the account
 
+    # Add member to account request
     AddMemberRequest:
       type: object
       required: [userId]
+      description: Request model for adding a member to a shared account
       properties:
         userId:
           type: string
           format: uuid
+          description: UUID of the user to add as a member to the account
 
+    # Category model
     CategoryResponse:
       type: object
+      description: Expense category for organizing movements
       properties:
         id:
           type: string
           format: uuid
+          description: Unique identifier for the category
         label:
           type: string
+          description: Category name (e.g., "Food", "Transportation", "Entertainment")
         color:
           type: string
+          description: Hex color code for UI representation (e.g., "#FF5733")
         icon:
           type: string
+          description: Icon identifier or emoji for visual representation in the UI
 
+    # Movement type enumeration
     MovementType:
       type: string
       enum: [DEBIT, CREDIT]
+      description: |
+        Type of financial transaction:
+        - DEBIT: Money going out (expense)
+        - CREDIT: Money coming in (income)
 
+    # Create movement request model
     CreateMovementRequest:
       type: object
       required: [accountId, createdBy, type, amount, movementDate]
+      description: Request model for recording a new financial transaction
       properties:
         accountId:
           type: string
           format: uuid
+          description: UUID of the account this movement belongs to
         createdBy:
           type: string
           format: uuid
+          description: UUID of the user creating this transaction
         categoryId:
           type: string
           format: uuid
+          description: Optional UUID of the expense category for this movement
         type:
           $ref: '#/components/schemas/MovementType'
         amount:
           type: number
           exclusiveMinimum: 0
+          description: Amount of the transaction (must be greater than 0)
         description:
           type: string
+          description: Optional description or notes about the transaction
         movementDate:
           type: string
           format: date
+          description: Date when the transaction occurred (YYYY-MM-DD format)
 
+    # Movement response model - returned from API
     MovementResponse:
       type: object
+      description: Complete transaction information
       properties:
         id:
           type: string
           format: uuid
+          description: Unique identifier for the movement
         accountId:
           type: string
           format: uuid
+          description: UUID of the account this movement belongs to
         createdBy:
           type: string
           format: uuid
+          description: UUID of the user who created this transaction
         categoryId:
           type: string
           format: uuid
+          description: UUID of the assigned category (if any)
         type:
           $ref: '#/components/schemas/MovementType'
         amount:
           type: number
+          description: Amount of the transaction
         description:
           type: string
+          description: Description or notes about the transaction
         movementDate:
           type: string
           format: date
+          description: Date when the transaction occurred
 
+    # Generic error response model
     ErrorResponse:
       type: object
+      description: Standard error response format
       properties:
         error:
           type: string
+          description: Error message describing what went wrong
