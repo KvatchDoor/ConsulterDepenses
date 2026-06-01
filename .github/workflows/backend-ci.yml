@@ -22,14 +22,12 @@ jobs:
     - name: Build, test and generate coverage
       run: |
         cd consulter-backend
-        mvn clean verify
+        mvn clean verify -ntp
 
     - name: SonarCloud Scan
-      uses: SonarSource/sonarcloud-github-action@master
+      uses: SonarSource/sonarqube-scan-action@v5
       with:
         args: >
-          -Dsonar.projectKey=consulterdepenseskvatchdoor
-          -Dsonar.organization=ConsulterDepenses
           -Dsonar.sources=consulter-backend/src/main
           -Dsonar.tests=consulter-backend/src/test
           -Dsonar.java.binaries=consulter-backend/target/classes
