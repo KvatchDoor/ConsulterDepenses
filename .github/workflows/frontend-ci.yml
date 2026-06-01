@@ -42,11 +42,9 @@ jobs:
         npm test -- --watch=false --browsers=chromium
 
     - name: SonarCloud Scan
-      uses: SonarSource/sonarcloud-github-action@master
+      uses: SonarSource/sonarqube-scan-action@v5
       with:
         args: >
-          -Dsonar.projectKey=consulterdepenseskvatchdoor
-          -Dsonar.organization=ConsulterDepenses
           -Dsonar.sources=consulter-frontend/src
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
