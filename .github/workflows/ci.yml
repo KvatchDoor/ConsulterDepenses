@@ -5,6 +5,11 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
 
 jobs:
   detect-changes:
@@ -51,14 +56,17 @@ jobs:
     needs: detect-changes
     if: needs.detect-changes.outputs.both-changed == 'true'
     uses: ./.github/workflows/ci-full.yml
+    secrets: inherit
 
   backend-ci:
     needs: detect-changes
     if: needs.detect-changes.outputs.backend-changed == 'true' && needs.detect-changes.outputs.both-changed == 'false'
     uses: ./.github/workflows/backend-ci.yml
+    secrets: inherit
 
   frontend-ci:
     needs: detect-changes
     if: needs.detect-changes.outputs.frontend-changed == 'true' && needs.detect-changes.outputs.both-changed == 'false'
     uses: ./.github/workflows/frontend-ci.yml
+    secrets: inherit
 
