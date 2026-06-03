@@ -1,0 +1,43 @@
+﻿name: "Full CI"
+
+on:
+  push: {}
+  pull_request: {}
+  workflow_dispatch: {}
+
+jobs:
+  full-ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Run frontend tests (if present)
+        working-directory: consulter-frontend
+        run: |
+          if [ -f package.json ]; then
+            npm ci
+            npm test
+          else
+            echo "No frontend package.json found; skipping frontend tests."
+          fi
+
+      - name: Run backend tests (if present)
+        run: |
+          if compgen -G "consulter-backend/*.sln" > /dev/null; then
+            dotnet test consulter-backend || exit 1
+          elif [ -f consulter-backend/package.json ]; then
+            (cd consulter-backend && npm ci && npm test) || exit 1
+          else
+            echo "No backend tests detected; skipping backend tests."
+          fi
