@@ -1,11 +1,14 @@
 name: Full CI Pipeline
 
+
 on:
   workflow_call:
 
 jobs:
   backend:
     uses: ./.github/workflows/backend-ci.yml
+    secrets: inherit
 
   frontend:
     uses: ./.github/workflows/frontend-ci.yml
+    secrets: inherit

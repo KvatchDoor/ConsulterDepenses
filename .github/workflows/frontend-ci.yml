@@ -2,6 +2,11 @@ name: Frontend CI
 
 on:
   workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
 
 jobs:
   build:
@@ -13,6 +18,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: Set up Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
@@ -46,6 +53,7 @@ jobs:
       with:
         args: >
           -Dsonar.sources=consulter-frontend/src
+          -Dsonar.javascript.lcov.reportPaths=consulter-frontend/coverage/lcov.info
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -63,4 +71,3 @@ jobs:
       with:
         name: frontend-test-results
         path: consulter-frontend/coverage/
-
