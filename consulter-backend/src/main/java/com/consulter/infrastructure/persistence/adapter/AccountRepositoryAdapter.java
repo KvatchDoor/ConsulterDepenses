@@ -37,6 +37,11 @@ public class AccountRepositoryAdapter implements AccountRepository {
     }
 
     @Override
+    public boolean existsMember(UUID accountId, UUID userId) {
+        return memberJpaRepository.existsById(new AccountMemberId(accountId, userId));
+    }
+
+    @Override
     public void addMember(UUID accountId, UUID userId) {
         memberJpaRepository.save(AccountMemberEntity.builder()
             .id(new AccountMemberId(accountId, userId))

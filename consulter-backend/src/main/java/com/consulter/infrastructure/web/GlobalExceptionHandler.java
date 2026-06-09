@@ -1,5 +1,6 @@
 package com.consulter.infrastructure.web;
 
+import com.consulter.application.exception.MemberAlreadyExistsException;
 import com.consulter.application.exception.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +12,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Map<String, String> handleNotFound(ResourceNotFoundException ex) {
+        return Map.of("error", ex.getMessage());
+    }
+
+    @ExceptionHandler(MemberAlreadyExistsException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public Map<String, String> handleMemberAlreadyExists(MemberAlreadyExistsException ex) {
         return Map.of("error", ex.getMessage());
     }
 }
