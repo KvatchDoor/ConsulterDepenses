@@ -402,7 +402,9 @@ components:
         amount:
           type: number
           exclusiveMinimum: 0
-          description: Amount of the transaction (must be greater than 0)
+          maximum: 10000
+          multipleOf: 0.01
+          description: Amount of the transaction (must be between 0.01 and 10000, max 2 decimal places)
         description:
           type: string
           description: Optional description or notes about the transaction

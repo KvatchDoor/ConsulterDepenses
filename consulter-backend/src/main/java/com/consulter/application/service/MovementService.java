@@ -29,6 +29,13 @@ public class MovementService implements MovementUseCase {
         Account account = accountRepository.findById(accountId)
             .orElseThrow(() -> new ResourceNotFoundException("Account not found: " + accountId));
 
+        if (amount.compareTo(BigDecimal.ZERO) <= 0)
+            throw new IllegalArgumentException("Amount must be greater than 0");
+        if (amount.compareTo(new BigDecimal("10000")) > 0)
+            throw new IllegalArgumentException("Amount must not exceed 10000");
+        if (amount.stripTrailingZeros().scale() > 2)
+            throw new IllegalArgumentException("Amount must have at most 2 decimal places");
+
         Movement movement = new Movement(null, accountId, createdBy, categoryId, type, amount, description, movementDate, null, null);
         Movement saved = movementRepository.save(movement);
 
