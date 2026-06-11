@@ -20,6 +20,4 @@ public class CategoryEntity {
     private String label;
 
     private String color;
-
-    private String icon;
 }

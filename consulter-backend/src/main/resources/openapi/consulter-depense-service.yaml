@@ -366,9 +366,6 @@ components:
         color:
           type: string
           description: Hex color code for UI representation (e.g., "#FF5733")
-        icon:
-          type: string
-          description: Icon identifier or emoji for visual representation in the UI
 
     # Movement type enumeration
     MovementType:

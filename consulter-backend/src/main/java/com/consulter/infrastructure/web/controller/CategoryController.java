@@ -20,8 +20,7 @@ public class CategoryController implements CategoriesApi {
             .map(c -> new CategoryResponse()
                 .id(c.id())
                 .label(c.label())
-                .color(c.color())
-                .icon(c.icon()))
+                .color(c.color()))
             .toList());
     }
 }

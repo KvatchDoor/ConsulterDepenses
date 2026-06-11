@@ -26,8 +26,8 @@ class CategoryServiceTest {
     @Test
     void findAll_returnsAllCategories() {
         List<Category> categories = List.of(
-            new Category(UUID.randomUUID(), "Alimentation", "#FF0000", "food"),
-            new Category(UUID.randomUUID(), "Transport", "#00FF00", "car")
+            new Category(UUID.randomUUID(), "Alimentation", "#FF0000"),
+            new Category(UUID.randomUUID(), "Transport", "#00FF00")
         );
         when(categoryRepository.findAll()).thenReturn(categories);
 

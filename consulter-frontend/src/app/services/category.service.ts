@@ -23,6 +23,10 @@ const ICON_BY_LABEL: Record<string, string> = Object.fromEntries(
   FALLBACK.map((c) => [c.label.toLowerCase(), c.icon])
 );
 
+const COLOR_BY_LABEL: Record<string, string> = Object.fromEntries(
+  FALLBACK.map((c) => [c.label.toLowerCase(), c.color])
+);
+
 @Injectable({ providedIn: 'root' })
 export class CategoryService {
   private readonly http = inject(HttpClient);
@@ -32,10 +36,14 @@ export class CategoryService {
     return this.http.get<Category[]>(this.url).pipe(
       map((cats) => {
         if (cats.length === 0) return FALLBACK;
-        return cats.map((c) => ({
-          ...c,
-          icon: c.icon || ICON_BY_LABEL[c.label.toLowerCase()] || '❓',
-        }));
+        return cats.map((c, i) => {
+          const key = c.label.toLowerCase();
+          return {
+            ...c,
+            icon: ICON_BY_LABEL[key] ?? FALLBACK[i % FALLBACK.length].icon,
+            color: c.color || COLOR_BY_LABEL[key] || FALLBACK[i % FALLBACK.length].color,
+          };
+        });
       }),
       catchError(() => of(FALLBACK)),
     );
