@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static java.time.LocalDate.of;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -27,6 +29,8 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class MovementServiceTest {
+
+    private static final LocalDate FIXED_DATE = of(2024, 1, 15);
 
     @Mock
     private MovementRepository movementRepository;
@@ -45,14 +49,14 @@ class MovementServiceTest {
     void create_creditMovement_increasesAccountBalance() {
         Account account = accountWithBalance(new BigDecimal("100.00"));
         Movement saved = new Movement(UUID.randomUUID(), account.id(), UUID.randomUUID(), null,
-            MovementType.CREDIT, new BigDecimal("50.00"), "virement", LocalDate.now(), null, null);
+            MovementType.CREDIT, new BigDecimal("50.00"), "virement", FIXED_DATE, null, null);
 
         when(accountRepository.findById(account.id())).thenReturn(Optional.of(account));
         when(movementRepository.save(any())).thenReturn(saved);
         when(accountRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         movementService.create(account.id(), saved.createdBy(), null,
-            MovementType.CREDIT, new BigDecimal("50.00"), "virement", LocalDate.now());
+            MovementType.CREDIT, new BigDecimal("50.00"), "virement", FIXED_DATE);
 
         ArgumentCaptor<Account> captor = ArgumentCaptor.forClass(Account.class);
         verify(accountRepository).save(captor.capture());
@@ -63,14 +67,14 @@ class MovementServiceTest {
     void create_debitMovement_decreasesAccountBalance() {
         Account account = accountWithBalance(new BigDecimal("100.00"));
         Movement saved = new Movement(UUID.randomUUID(), account.id(), UUID.randomUUID(), null,
-            MovementType.DEBIT, new BigDecimal("30.00"), "achat", LocalDate.now(), null, null);
+            MovementType.DEBIT, new BigDecimal("30.00"), "achat", FIXED_DATE, null, null);
 
         when(accountRepository.findById(account.id())).thenReturn(Optional.of(account));
         when(movementRepository.save(any())).thenReturn(saved);
         when(accountRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         movementService.create(account.id(), saved.createdBy(), null,
-            MovementType.DEBIT, new BigDecimal("30.00"), "achat", LocalDate.now());
+            MovementType.DEBIT, new BigDecimal("30.00"), "achat", FIXED_DATE);
 
         ArgumentCaptor<Account> captor = ArgumentCaptor.forClass(Account.class);
         verify(accountRepository).save(captor.capture());
@@ -83,7 +87,7 @@ class MovementServiceTest {
         when(accountRepository.findById(accountId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> movementService.create(accountId, UUID.randomUUID(), null,
-            MovementType.DEBIT, BigDecimal.TEN, "test", LocalDate.now()))
+            MovementType.DEBIT, BigDecimal.TEN, "test", FIXED_DATE))
             .isInstanceOf(ResourceNotFoundException.class)
             .hasMessageContaining(accountId.toString());
     }
@@ -92,7 +96,7 @@ class MovementServiceTest {
     void findById_returnsMovement_whenFound() {
         UUID id = UUID.randomUUID();
         Movement movement = new Movement(id, UUID.randomUUID(), UUID.randomUUID(), null,
-            MovementType.CREDIT, BigDecimal.TEN, "test", LocalDate.now(), null, null);
+            MovementType.CREDIT, BigDecimal.TEN, "test", FIXED_DATE, null, null);
         when(movementRepository.findById(id)).thenReturn(Optional.of(movement));
 
         assertThat(movementService.findById(id)).isEqualTo(movement);
@@ -113,7 +117,7 @@ class MovementServiceTest {
         UUID accountId = UUID.randomUUID();
         List<Movement> movements = List.of(
             new Movement(UUID.randomUUID(), accountId, UUID.randomUUID(), null,
-                MovementType.DEBIT, BigDecimal.TEN, "test", LocalDate.now(), null, null)
+                MovementType.DEBIT, BigDecimal.TEN, "test", FIXED_DATE, null, null)
         );
         when(movementRepository.findByAccountId(accountId)).thenReturn(movements);
 
@@ -125,7 +129,7 @@ class MovementServiceTest {
         Account account = accountWithBalance(new BigDecimal("100.00"));
         UUID id = UUID.randomUUID();
         Movement movement = new Movement(id, account.id(), UUID.randomUUID(), null,
-            MovementType.DEBIT, BigDecimal.TEN, "test", LocalDate.now(), null, null);
+            MovementType.DEBIT, BigDecimal.TEN, "test", FIXED_DATE, null, null);
 
         when(movementRepository.findById(id)).thenReturn(Optional.of(movement));
         when(accountRepository.findById(account.id())).thenReturn(Optional.of(account));
@@ -144,7 +148,7 @@ class MovementServiceTest {
         Account account = accountWithBalance(new BigDecimal("150.00"));
         UUID movementId = UUID.randomUUID();
         Movement creditMovement = new Movement(movementId, account.id(), UUID.randomUUID(), null,
-            MovementType.CREDIT, new BigDecimal("50.00"), "virement entrant", LocalDate.now(), null, null);
+            MovementType.CREDIT, new BigDecimal("50.00"), "virement entrant", FIXED_DATE, null, null);
 
         when(movementRepository.findById(movementId)).thenReturn(Optional.of(creditMovement));
         when(accountRepository.findById(account.id())).thenReturn(Optional.of(account));
@@ -165,7 +169,7 @@ class MovementServiceTest {
         Account account = accountWithBalance(new BigDecimal("70.00"));
         UUID movementId = UUID.randomUUID();
         Movement debitMovement = new Movement(movementId, account.id(), UUID.randomUUID(), null,
-            MovementType.DEBIT, new BigDecimal("30.00"), "achat", LocalDate.now(), null, null);
+            MovementType.DEBIT, new BigDecimal("30.00"), "achat", FIXED_DATE, null, null);
 
         when(movementRepository.findById(movementId)).thenReturn(Optional.of(debitMovement));
         when(accountRepository.findById(account.id())).thenReturn(Optional.of(account));
@@ -198,7 +202,7 @@ class MovementServiceTest {
         when(accountRepository.findById(account.id())).thenReturn(Optional.of(account));
 
         assertThatThrownBy(() -> movementService.create(account.id(), UUID.randomUUID(), null,
-            MovementType.CREDIT, BigDecimal.ZERO, "test", LocalDate.now()))
+            MovementType.CREDIT, BigDecimal.ZERO, "test", FIXED_DATE))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("Amount must be greater than 0");
     }
@@ -209,7 +213,7 @@ class MovementServiceTest {
         when(accountRepository.findById(account.id())).thenReturn(Optional.of(account));
 
         assertThatThrownBy(() -> movementService.create(account.id(), UUID.randomUUID(), null,
-            MovementType.DEBIT, new BigDecimal("-1"), "test", LocalDate.now()))
+            MovementType.DEBIT, new BigDecimal("-1"), "test", FIXED_DATE))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("Amount must be greater than 0");
     }
@@ -220,7 +224,7 @@ class MovementServiceTest {
         when(accountRepository.findById(account.id())).thenReturn(Optional.of(account));
 
         assertThatThrownBy(() -> movementService.create(account.id(), UUID.randomUUID(), null,
-            MovementType.CREDIT, new BigDecimal("10001"), "test", LocalDate.now()))
+            MovementType.CREDIT, new BigDecimal("10001"), "test", FIXED_DATE))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("Amount must not exceed 10000");
     }
@@ -230,14 +234,14 @@ class MovementServiceTest {
         Account account = accountWithBalance(new BigDecimal("0.00"));
         BigDecimal amount = new BigDecimal("10000");
         Movement saved = new Movement(UUID.randomUUID(), account.id(), UUID.randomUUID(), null,
-            MovementType.CREDIT, amount, "max amount", LocalDate.now(), null, null);
+            MovementType.CREDIT, amount, "max amount", FIXED_DATE, null, null);
 
         when(accountRepository.findById(account.id())).thenReturn(Optional.of(account));
         when(movementRepository.save(any())).thenReturn(saved);
         when(accountRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         Movement result = movementService.create(account.id(), saved.createdBy(), null,
-            MovementType.CREDIT, amount, "max amount", LocalDate.now());
+            MovementType.CREDIT, amount, "max amount", FIXED_DATE);
 
         assertThat(result).isEqualTo(saved);
     }
@@ -248,7 +252,7 @@ class MovementServiceTest {
         when(accountRepository.findById(account.id())).thenReturn(Optional.of(account));
 
         assertThatThrownBy(() -> movementService.create(account.id(), UUID.randomUUID(), null,
-            MovementType.CREDIT, new BigDecimal("0.001"), "test", LocalDate.now()))
+            MovementType.CREDIT, new BigDecimal("0.001"), "test", FIXED_DATE))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("Amount must have at most 2 decimal places");
     }
@@ -258,14 +262,14 @@ class MovementServiceTest {
         Account account = accountWithBalance(new BigDecimal("100.00"));
         BigDecimal amount = new BigDecimal("9.99");
         Movement saved = new Movement(UUID.randomUUID(), account.id(), UUID.randomUUID(), null,
-            MovementType.CREDIT, amount, "café", LocalDate.now(), null, null);
+            MovementType.CREDIT, amount, "café", FIXED_DATE, null, null);
 
         when(accountRepository.findById(account.id())).thenReturn(Optional.of(account));
         when(movementRepository.save(any())).thenReturn(saved);
         when(accountRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         Movement result = movementService.create(account.id(), saved.createdBy(), null,
-            MovementType.CREDIT, amount, "café", LocalDate.now());
+            MovementType.CREDIT, amount, "café", FIXED_DATE);
 
         assertThat(result).isEqualTo(saved);
     }
@@ -278,7 +282,7 @@ class MovementServiceTest {
         when(accountRepository.findById(account.id())).thenReturn(Optional.of(account));
 
         assertThatThrownBy(() -> movementService.create(account.id(), UUID.randomUUID(), null,
-            MovementType.CREDIT, new BigDecimal("50.00"), null, LocalDate.now()))
+            MovementType.CREDIT, new BigDecimal("50.00"), null, FIXED_DATE))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("Description is required");
     }
@@ -289,7 +293,7 @@ class MovementServiceTest {
         when(accountRepository.findById(account.id())).thenReturn(Optional.of(account));
 
         assertThatThrownBy(() -> movementService.create(account.id(), UUID.randomUUID(), null,
-            MovementType.CREDIT, new BigDecimal("50.00"), "   ", LocalDate.now()))
+            MovementType.CREDIT, new BigDecimal("50.00"), "   ", FIXED_DATE))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("Description is required");
     }
@@ -299,14 +303,14 @@ class MovementServiceTest {
         Account account = accountWithBalance(new BigDecimal("100.00"));
         BigDecimal amount = new BigDecimal("50.00");
         Movement saved = new Movement(UUID.randomUUID(), account.id(), UUID.randomUUID(), null,
-            MovementType.CREDIT, amount, "loyer", LocalDate.now(), null, null);
+            MovementType.CREDIT, amount, "loyer", FIXED_DATE, null, null);
 
         when(accountRepository.findById(account.id())).thenReturn(Optional.of(account));
         when(movementRepository.save(any())).thenReturn(saved);
         when(accountRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         Movement result = movementService.create(account.id(), saved.createdBy(), null,
-            MovementType.CREDIT, amount, "loyer", LocalDate.now());
+            MovementType.CREDIT, amount, "loyer", FIXED_DATE);
 
         assertThat(result).isEqualTo(saved);
     }

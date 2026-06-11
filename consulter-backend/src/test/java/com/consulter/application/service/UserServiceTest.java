@@ -13,12 +13,16 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
+import static java.time.LocalDateTime.of;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
+
+    private static final LocalDateTime FIXED_DATETIME = of(2024, 1, 15, 10, 0, 0);
 
     @Mock
     private UserRepository userRepository;
@@ -29,7 +33,7 @@ class UserServiceTest {
     @Test
     void findById_returnsUser_whenFound() {
         UUID id = UUID.randomUUID();
-        User user = new User(id, "john@example.com", "Doe", "John", LocalDateTime.now(), null);
+        User user = new User(id, "john@example.com", "Doe", "John", FIXED_DATETIME, null);
         when(userRepository.findById(id)).thenReturn(Optional.of(user));
 
         User result = userService.findById(id);

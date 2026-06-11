@@ -18,6 +18,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+import static java.time.LocalDate.of;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -28,6 +30,8 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class MovementControllerTest {
 
+    private static final LocalDate FIXED_DATE = of(2024, 1, 15);
+
     @Mock
     private MovementUseCase movementUseCase;
 
@@ -37,7 +41,7 @@ class MovementControllerTest {
     private Movement sampleMovement(UUID accountId) {
         return new Movement(
             UUID.randomUUID(), accountId, UUID.randomUUID(), null,
-            MovementType.CREDIT, new BigDecimal("50.00"), "test", LocalDate.now(), null, null
+            MovementType.CREDIT, new BigDecimal("50.00"), "test", FIXED_DATE, null, null
         );
     }
 
@@ -52,7 +56,7 @@ class MovementControllerTest {
             .createdBy(createdBy)
             .type(com.consulter.infrastructure.web.model.MovementType.CREDIT)
             .amount(new BigDecimal("50.00"))
-            .movementDate(LocalDate.now());
+            .movementDate(FIXED_DATE);
 
         when(movementUseCase.create(any(), any(), any(), any(), any(), any(), any()))
             .thenReturn(movement);
