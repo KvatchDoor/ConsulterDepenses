@@ -82,6 +82,19 @@ import { StateService } from '../../services/state.service';
       <!-- Form fields -->
       <div class="form">
         <div class="field">
+          <label class="label" for="description">Description</label>
+          <input
+            id="description"
+            class="input"
+            type="text"
+            placeholder="ex: Courses Carrefour"
+            [(ngModel)]="description"
+            required
+            aria-required="true"
+          />
+        </div>
+
+        <div class="field">
           <label class="label">Date</label>
           <input class="input" type="date" [(ngModel)]="date" />
         </div>
@@ -103,21 +116,11 @@ import { StateService } from '../../services/state.service';
           </div>
         </div>
 
-        <div class="field">
-          <label class="label">Description <span class="opt">(optionnel)</span></label>
-          <input
-            class="input"
-            type="text"
-            placeholder="ex: Courses Carrefour"
-            [(ngModel)]="description"
-          />
-        </div>
-
         <button
           class="submit-btn"
           [class.submit-btn--credit]="type() === 'CREDIT'"
           (click)="submit()"
-          [disabled]="loading() || !amount || !!amountError()"
+          [disabled]="loading() || !amount || !!amountError() || !description.trim()"
         >
           @if (loading()) {
             <span class="spinner"></span>
@@ -188,7 +191,7 @@ export class NewMovementComponent implements OnInit {
   }
 
   submit(): void {
-    if (!this.amount || this.amountError()) return;
+    if (!this.amount || this.amountError() || !this.description.trim()) return;
 
     this.loading.set(true);
     this.error.set(null);

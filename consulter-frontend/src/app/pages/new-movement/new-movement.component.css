@@ -218,7 +218,7 @@
   background: linear-gradient(135deg, #10b981, #34d399);
   box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
 }
-.submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.submit-btn:disabled { background: #cbd5e1; box-shadow: none; color: #94a3b8; cursor: not-allowed; }
 .submit-btn:hover:not(:disabled) { transform: translateY(-1px); }
 
 .spinner {
