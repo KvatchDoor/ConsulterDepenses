@@ -19,6 +19,10 @@ const FALLBACK: Category[] = [
   { id: 'f12', label: 'Autre', color: '#B2BEC3', icon: '❓' },
 ];
 
+const ICON_BY_LABEL: Record<string, string> = Object.fromEntries(
+  FALLBACK.map((c) => [c.label.toLowerCase(), c.icon])
+);
+
 @Injectable({ providedIn: 'root' })
 export class CategoryService {
   private readonly http = inject(HttpClient);
@@ -26,7 +30,13 @@ export class CategoryService {
 
   getAll(): Observable<Category[]> {
     return this.http.get<Category[]>(this.url).pipe(
-      map((cats) => (cats.length > 0 ? cats : FALLBACK)),
+      map((cats) => {
+        if (cats.length === 0) return FALLBACK;
+        return cats.map((c) => ({
+          ...c,
+          icon: c.icon || ICON_BY_LABEL[c.label.toLowerCase()] || '❓',
+        }));
+      }),
       catchError(() => of(FALLBACK)),
     );
   }
