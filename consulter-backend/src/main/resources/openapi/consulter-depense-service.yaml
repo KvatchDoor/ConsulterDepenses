@@ -382,7 +382,7 @@ components:
     # Create movement request model
     CreateMovementRequest:
       type: object
-      required: [accountId, createdBy, type, amount, movementDate]
+      required: [accountId, createdBy, type, amount, movementDate, description]
       description: Request model for recording a new financial transaction
       properties:
         accountId:
@@ -407,7 +407,8 @@ components:
           description: Amount of the transaction (must be between 0.01 and 10000, max 2 decimal places)
         description:
           type: string
-          description: Optional description or notes about the transaction
+          minLength: 1
+          description: Description of the transaction (required)
         movementDate:
           type: string
           format: date

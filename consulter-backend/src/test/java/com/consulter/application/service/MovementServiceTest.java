@@ -269,4 +269,45 @@ class MovementServiceTest {
 
         assertThat(result).isEqualTo(saved);
     }
+
+    // --- Description validation tests ---
+
+    @Test
+    void create_whenDescriptionIsNull_thenThrowsIllegalArgumentException() {
+        Account account = accountWithBalance(new BigDecimal("100.00"));
+        when(accountRepository.findById(account.id())).thenReturn(Optional.of(account));
+
+        assertThatThrownBy(() -> movementService.create(account.id(), UUID.randomUUID(), null,
+            MovementType.CREDIT, new BigDecimal("50.00"), null, LocalDate.now()))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Description is required");
+    }
+
+    @Test
+    void create_whenDescriptionIsBlank_thenThrowsIllegalArgumentException() {
+        Account account = accountWithBalance(new BigDecimal("100.00"));
+        when(accountRepository.findById(account.id())).thenReturn(Optional.of(account));
+
+        assertThatThrownBy(() -> movementService.create(account.id(), UUID.randomUUID(), null,
+            MovementType.CREDIT, new BigDecimal("50.00"), "   ", LocalDate.now()))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Description is required");
+    }
+
+    @Test
+    void create_whenDescriptionIsProvided_thenSucceeds() {
+        Account account = accountWithBalance(new BigDecimal("100.00"));
+        BigDecimal amount = new BigDecimal("50.00");
+        Movement saved = new Movement(UUID.randomUUID(), account.id(), UUID.randomUUID(), null,
+            MovementType.CREDIT, amount, "loyer", LocalDate.now(), null, null);
+
+        when(accountRepository.findById(account.id())).thenReturn(Optional.of(account));
+        when(movementRepository.save(any())).thenReturn(saved);
+        when(accountRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        Movement result = movementService.create(account.id(), saved.createdBy(), null,
+            MovementType.CREDIT, amount, "loyer", LocalDate.now());
+
+        assertThat(result).isEqualTo(saved);
+    }
 }

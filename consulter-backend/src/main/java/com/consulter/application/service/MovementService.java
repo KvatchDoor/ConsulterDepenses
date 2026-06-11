@@ -35,6 +35,8 @@ public class MovementService implements MovementUseCase {
             throw new IllegalArgumentException("Amount must not exceed 10000");
         if (amount.stripTrailingZeros().scale() > 2)
             throw new IllegalArgumentException("Amount must have at most 2 decimal places");
+        if (description == null || description.isBlank())
+            throw new IllegalArgumentException("Description is required");
 
         Movement movement = new Movement(null, accountId, createdBy, categoryId, type, amount, description, movementDate, null, null);
         Movement saved = movementRepository.save(movement);
