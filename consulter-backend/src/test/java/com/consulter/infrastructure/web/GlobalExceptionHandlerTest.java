@@ -29,4 +29,13 @@ class GlobalExceptionHandlerTest {
 
         assertThat(result).containsEntry("error", "User already member of account");
     }
+
+    @Test
+    void handleIllegalArgument_returnsMapWithErrorMessage() {
+        IllegalArgumentException ex = new IllegalArgumentException("Amount must be greater than 0");
+
+        Map<String, String> result = handler.handleIllegalArgument(ex);
+
+        assertThat(result).containsEntry("error", "Amount must be greater than 0");
+    }
 }

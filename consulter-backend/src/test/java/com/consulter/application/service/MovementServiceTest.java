@@ -189,4 +189,84 @@ class MovementServiceTest {
             .isInstanceOf(ResourceNotFoundException.class)
             .hasMessageContaining(unknownId.toString());
     }
+
+    // --- Amount validation tests ---
+
+    @Test
+    void create_whenAmountIsZero_thenThrowsIllegalArgumentException() {
+        Account account = accountWithBalance(new BigDecimal("100.00"));
+        when(accountRepository.findById(account.id())).thenReturn(Optional.of(account));
+
+        assertThatThrownBy(() -> movementService.create(account.id(), UUID.randomUUID(), null,
+            MovementType.CREDIT, BigDecimal.ZERO, "test", LocalDate.now()))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Amount must be greater than 0");
+    }
+
+    @Test
+    void create_whenAmountIsNegative_thenThrowsIllegalArgumentException() {
+        Account account = accountWithBalance(new BigDecimal("100.00"));
+        when(accountRepository.findById(account.id())).thenReturn(Optional.of(account));
+
+        assertThatThrownBy(() -> movementService.create(account.id(), UUID.randomUUID(), null,
+            MovementType.DEBIT, new BigDecimal("-1"), "test", LocalDate.now()))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Amount must be greater than 0");
+    }
+
+    @Test
+    void create_whenAmountExceedsTenThousand_thenThrowsIllegalArgumentException() {
+        Account account = accountWithBalance(new BigDecimal("100.00"));
+        when(accountRepository.findById(account.id())).thenReturn(Optional.of(account));
+
+        assertThatThrownBy(() -> movementService.create(account.id(), UUID.randomUUID(), null,
+            MovementType.CREDIT, new BigDecimal("10001"), "test", LocalDate.now()))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Amount must not exceed 10000");
+    }
+
+    @Test
+    void create_whenAmountIsExactlyTenThousand_thenSucceeds() {
+        Account account = accountWithBalance(new BigDecimal("0.00"));
+        BigDecimal amount = new BigDecimal("10000");
+        Movement saved = new Movement(UUID.randomUUID(), account.id(), UUID.randomUUID(), null,
+            MovementType.CREDIT, amount, "max amount", LocalDate.now(), null, null);
+
+        when(accountRepository.findById(account.id())).thenReturn(Optional.of(account));
+        when(movementRepository.save(any())).thenReturn(saved);
+        when(accountRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        Movement result = movementService.create(account.id(), saved.createdBy(), null,
+            MovementType.CREDIT, amount, "max amount", LocalDate.now());
+
+        assertThat(result).isEqualTo(saved);
+    }
+
+    @Test
+    void create_whenAmountHasMoreThanTwoDecimalPlaces_thenThrowsIllegalArgumentException() {
+        Account account = accountWithBalance(new BigDecimal("100.00"));
+        when(accountRepository.findById(account.id())).thenReturn(Optional.of(account));
+
+        assertThatThrownBy(() -> movementService.create(account.id(), UUID.randomUUID(), null,
+            MovementType.CREDIT, new BigDecimal("0.001"), "test", LocalDate.now()))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Amount must have at most 2 decimal places");
+    }
+
+    @Test
+    void create_whenAmountHasTwoDecimalPlaces_thenSucceeds() {
+        Account account = accountWithBalance(new BigDecimal("100.00"));
+        BigDecimal amount = new BigDecimal("9.99");
+        Movement saved = new Movement(UUID.randomUUID(), account.id(), UUID.randomUUID(), null,
+            MovementType.CREDIT, amount, "café", LocalDate.now(), null, null);
+
+        when(accountRepository.findById(account.id())).thenReturn(Optional.of(account));
+        when(movementRepository.save(any())).thenReturn(saved);
+        when(accountRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        Movement result = movementService.create(account.id(), saved.createdBy(), null,
+            MovementType.CREDIT, amount, "café", LocalDate.now());
+
+        assertThat(result).isEqualTo(saved);
+    }
 }
