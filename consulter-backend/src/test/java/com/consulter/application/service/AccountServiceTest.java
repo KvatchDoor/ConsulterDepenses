@@ -1,5 +1,6 @@
 package com.consulter.application.service;
 
+import com.consulter.application.exception.MemberAlreadyExistsException;
 import com.consulter.application.exception.ResourceNotFoundException;
 import com.consulter.domain.model.Account;
 import com.consulter.domain.port.out.AccountRepository;
@@ -89,10 +90,23 @@ class AccountServiceTest {
     void addMember_delegatesToRepository() {
         UUID accountId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
+        when(accountRepository.existsMember(accountId, userId)).thenReturn(false);
 
         accountService.addMember(accountId, userId);
 
         verify(accountRepository).addMember(accountId, userId);
+    }
+
+    @Test
+    void addMember_throwsMemberAlreadyExistsException_whenAlreadyMember() {
+        UUID accountId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        when(accountRepository.existsMember(accountId, userId)).thenReturn(true);
+
+        assertThatThrownBy(() -> accountService.addMember(accountId, userId))
+            .isInstanceOf(MemberAlreadyExistsException.class)
+            .hasMessageContaining(userId.toString())
+            .hasMessageContaining(accountId.toString());
     }
 
     @Test

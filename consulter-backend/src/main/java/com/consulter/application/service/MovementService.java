@@ -29,6 +29,15 @@ public class MovementService implements MovementUseCase {
         Account account = accountRepository.findById(accountId)
             .orElseThrow(() -> new ResourceNotFoundException("Account not found: " + accountId));
 
+        if (amount.compareTo(BigDecimal.ZERO) <= 0)
+            throw new IllegalArgumentException("Amount must be greater than 0");
+        if (amount.compareTo(new BigDecimal("10000")) > 0)
+            throw new IllegalArgumentException("Amount must not exceed 10000");
+        if (amount.stripTrailingZeros().scale() > 2)
+            throw new IllegalArgumentException("Amount must have at most 2 decimal places");
+        if (description == null || description.isBlank())
+            throw new IllegalArgumentException("Description is required");
+
         Movement movement = new Movement(null, accountId, createdBy, categoryId, type, amount, description, movementDate, null, null);
         Movement saved = movementRepository.save(movement);
 
@@ -58,6 +67,21 @@ public class MovementService implements MovementUseCase {
     @Override
     @Transactional
     public void delete(UUID id) {
+        Movement movement = movementRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Movement not found: " + id));
+
+        Account account = accountRepository.findById(movement.accountId())
+            .orElseThrow(() -> new ResourceNotFoundException("Account not found: " + movement.accountId()));
+
+        BigDecimal newBalance = movement.type() == MovementType.CREDIT
+            ? account.balance().subtract(movement.amount())
+            : account.balance().add(movement.amount());
+
+        accountRepository.save(new Account(
+            account.id(), account.ownerId(), account.name(),
+            newBalance, account.currency(), account.createdAt(), LocalDateTime.now()
+        ));
+
         movementRepository.deleteById(id);
     }
 }

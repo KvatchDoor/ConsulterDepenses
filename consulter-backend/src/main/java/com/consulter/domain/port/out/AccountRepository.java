@@ -9,6 +9,7 @@ public interface AccountRepository {
     Account save(Account account);
     Optional<Account> findById(UUID id);
     List<Account> findAccessibleByUserId(UUID userId);
+    boolean existsMember(UUID accountId, UUID userId);
     void addMember(UUID accountId, UUID userId);
     void removeMember(UUID accountId, UUID userId);
 }

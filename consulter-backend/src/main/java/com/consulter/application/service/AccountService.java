@@ -1,5 +1,6 @@
 package com.consulter.application.service;
 
+import com.consulter.application.exception.MemberAlreadyExistsException;
 import com.consulter.application.exception.ResourceNotFoundException;
 import com.consulter.domain.model.Account;
 import com.consulter.domain.port.in.AccountUseCase;
@@ -35,6 +36,9 @@ public class AccountService implements AccountUseCase {
 
     @Override
     public void addMember(UUID accountId, UUID userId) {
+        if (accountRepository.existsMember(accountId, userId)) {
+            throw new MemberAlreadyExistsException("User " + userId + " is already a member of account " + accountId);
+        }
         accountRepository.addMember(accountId, userId);
     }
 
