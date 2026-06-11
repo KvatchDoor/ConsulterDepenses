@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { BottomNavComponent } from '../../components/bottom-nav/bottom-nav.component';
@@ -49,18 +49,34 @@ import { StateService } from '../../services/state.service';
       </div>
 
       <!-- Amount -->
-      <div class="amount-wrap" [class.amount-wrap--credit]="type() === 'CREDIT'">
+      <div class="amount-wrap" [class.amount-wrap--credit]="type() === 'CREDIT'" [class.amount-wrap--invalid]="amountError()">
         <span class="amount-sign">{{ type() === 'CREDIT' ? '+' : '−' }}</span>
         <input
           class="amount-input"
           type="number"
-          min="0"
+          min="0.01"
+          max="10000"
           step="0.01"
           placeholder="0,00"
           [(ngModel)]="amount"
           inputmode="decimal"
+          (ngModelChange)="onAmountChange()"
+          aria-label="Montant"
+          [attr.aria-invalid]="amountError() ? 'true' : null"
+          aria-describedby="amount-error"
         />
         <span class="amount-currency">{{ currency() }}</span>
+      </div>
+      <div
+        id="amount-error"
+        class="amount-error"
+        role="alert"
+        aria-live="polite"
+        [class.amount-error--visible]="amountError()"
+      >
+        @if (amountError()) {
+          {{ amountError() }}
+        }
       </div>
 
       <!-- Form fields -->
@@ -101,7 +117,7 @@ import { StateService } from '../../services/state.service';
           class="submit-btn"
           [class.submit-btn--credit]="type() === 'CREDIT'"
           (click)="submit()"
-          [disabled]="loading() || !amount || amount <= 0"
+          [disabled]="loading() || !amount || !!amountError()"
         >
           @if (loading()) {
             <span class="spinner"></span>
@@ -133,12 +149,34 @@ export class NewMovementComponent implements OnInit {
   error = signal<string | null>(null);
   readonly currency = this.state.currency;
 
+  /** Signal mis à jour lors de chaque changement du champ montant */
+  private readonly amountValue = signal<number | null>(null);
+
+  /** Message d'erreur calculé à partir de la valeur saisie */
+  readonly amountError = computed<string | null>(() => {
+    const v = this.amountValue();
+    if (v === null) return null;
+    if (v <= 0) return 'Le montant doit être supérieur à 0';
+    if (v > 10000) return 'Le montant ne peut pas dépasser 10 000 €';
+    // Vérifie que la valeur n'a pas plus de 2 décimales
+    const str = v.toString();
+    const dot = str.indexOf('.');
+    if (dot !== -1 && str.length - dot - 1 > 2) {
+      return 'Le montant ne peut pas avoir plus de 2 décimales';
+    }
+    return null;
+  });
+
   ngOnInit(): void {
     if (!this.state.isReady()) {
       this.router.navigate(['/setup']);
       return;
     }
     this.categorySvc.getAll().subscribe((cats) => this.categories.set(cats));
+  }
+
+  onAmountChange(): void {
+    this.amountValue.set(this.amount);
   }
 
   toggleCat(id: string): void {
@@ -150,7 +188,7 @@ export class NewMovementComponent implements OnInit {
   }
 
   submit(): void {
-    if (!this.amount || this.amount <= 0) return;
+    if (!this.amount || this.amountError()) return;
 
     this.loading.set(true);
     this.error.set(null);

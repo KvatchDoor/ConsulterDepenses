@@ -107,6 +107,48 @@
 .amount-input::-webkit-outer-spin-button { -webkit-appearance: none; }
 .amount-currency { font-size: 18px; font-weight: 600; color: #94a3b8; white-space: nowrap; }
 
+/* Amount invalid state */
+.amount-wrap--invalid {
+  border-color: #f43f5e !important;
+  box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.12);
+}
+
+/* Amount error message */
+.amount-error {
+  margin: -18px 16px 10px;
+  min-height: 0;
+  max-height: 0;
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 500;
+  color: #dc2626;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: max-height 0.2s ease, opacity 0.2s ease, margin 0.2s ease;
+  opacity: 0;
+}
+.amount-error--visible {
+  max-height: 40px;
+  opacity: 1;
+  margin-bottom: 6px;
+  padding: 0 4px;
+}
+.amount-error--visible::before {
+  content: '!';
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fee2e2;
+  color: #dc2626;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
 /* Form */
 .form { padding: 0 16px; display: flex; flex-direction: column; gap: 20px; }
 .field { display: flex; flex-direction: column; gap: 8px; }
