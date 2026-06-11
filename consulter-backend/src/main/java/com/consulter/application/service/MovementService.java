@@ -58,6 +58,21 @@ public class MovementService implements MovementUseCase {
     @Override
     @Transactional
     public void delete(UUID id) {
+        Movement movement = movementRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Movement not found: " + id));
+
+        Account account = accountRepository.findById(movement.accountId())
+            .orElseThrow(() -> new ResourceNotFoundException("Account not found: " + movement.accountId()));
+
+        BigDecimal newBalance = movement.type() == MovementType.CREDIT
+            ? account.balance().subtract(movement.amount())
+            : account.balance().add(movement.amount());
+
+        accountRepository.save(new Account(
+            account.id(), account.ownerId(), account.name(),
+            newBalance, account.currency(), account.createdAt(), LocalDateTime.now()
+        ));
+
         movementRepository.deleteById(id);
     }
 }

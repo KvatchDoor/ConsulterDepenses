@@ -122,10 +122,71 @@ class MovementServiceTest {
 
     @Test
     void delete_callsRepositoryDeleteById() {
+        Account account = accountWithBalance(new BigDecimal("100.00"));
         UUID id = UUID.randomUUID();
+        Movement movement = new Movement(id, account.id(), UUID.randomUUID(), null,
+            MovementType.DEBIT, BigDecimal.TEN, "test", LocalDate.now(), null, null);
+
+        when(movementRepository.findById(id)).thenReturn(Optional.of(movement));
+        when(accountRepository.findById(account.id())).thenReturn(Optional.of(account));
+        when(accountRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         movementService.delete(id);
 
         verify(movementRepository).deleteById(id);
+    }
+
+    // --- Bug exposing tests (intentionally failing on current code) ---
+
+    @Test
+    void delete_creditMovement_reversesBalanceOnAccount() {
+        // Arrange — compte à 150 €, CRÉDIT de 50 € existant
+        Account account = accountWithBalance(new BigDecimal("150.00"));
+        UUID movementId = UUID.randomUUID();
+        Movement creditMovement = new Movement(movementId, account.id(), UUID.randomUUID(), null,
+            MovementType.CREDIT, new BigDecimal("50.00"), "virement entrant", LocalDate.now(), null, null);
+
+        when(movementRepository.findById(movementId)).thenReturn(Optional.of(creditMovement));
+        when(accountRepository.findById(account.id())).thenReturn(Optional.of(account));
+        when(accountRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        // Act
+        movementService.delete(movementId);
+
+        // Assert — le solde doit être réduit de 50 € (reversal du CRÉDIT)
+        ArgumentCaptor<Account> captor = ArgumentCaptor.forClass(Account.class);
+        verify(accountRepository).save(captor.capture());
+        assertThat(captor.getValue().balance()).isEqualByComparingTo(new BigDecimal("100.00"));
+    }
+
+    @Test
+    void delete_debitMovement_reversesBalanceOnAccount() {
+        // Arrange — compte à 70 €, DÉBIT de 30 € existant
+        Account account = accountWithBalance(new BigDecimal("70.00"));
+        UUID movementId = UUID.randomUUID();
+        Movement debitMovement = new Movement(movementId, account.id(), UUID.randomUUID(), null,
+            MovementType.DEBIT, new BigDecimal("30.00"), "achat", LocalDate.now(), null, null);
+
+        when(movementRepository.findById(movementId)).thenReturn(Optional.of(debitMovement));
+        when(accountRepository.findById(account.id())).thenReturn(Optional.of(account));
+        when(accountRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        // Act
+        movementService.delete(movementId);
+
+        // Assert — le solde doit être augmenté de 30 € (reversal du DÉBIT)
+        ArgumentCaptor<Account> captor = ArgumentCaptor.forClass(Account.class);
+        verify(accountRepository).save(captor.capture());
+        assertThat(captor.getValue().balance()).isEqualByComparingTo(new BigDecimal("100.00"));
+    }
+
+    @Test
+    void delete_throwsResourceNotFoundException_whenMovementNotFound() {
+        UUID unknownId = UUID.randomUUID();
+        when(movementRepository.findById(unknownId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> movementService.delete(unknownId))
+            .isInstanceOf(ResourceNotFoundException.class)
+            .hasMessageContaining(unknownId.toString());
     }
 }
